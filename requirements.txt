@@ -12,7 +12,7 @@ camel-ai
 # OSINT tools
 snscrape
 yt-dlp
-python-geocoder
+geocoder
 exifread
 pillow
 opencv-python
