@@ -2,7 +2,7 @@ import os
 import json
 import asyncio
 from typing import Dict, List, Any, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 async def reverse_image_search(image_path: str) -> Dict[str, Any]:
@@ -37,7 +37,7 @@ async def reverse_image_search(image_path: str) -> Dict[str, Any]:
         matches = []
         for i in range(1, 4):  # 1-3 matches
             # Create dates slightly in the past
-            date = (datetime.now() - asyncio.timedelta(days=i*5)).strftime("%Y-%m-%d")
+            date = (datetime.now() - timedelta(days=i*5)).strftime("%Y-%m-%d")
             
             matches.append({
                 "url": f"https://example.com/image_{i}",
@@ -155,7 +155,7 @@ async def analyze_shadows(image_path: str, claimed_location: Optional[str] = Non
         else:
             # Estimate a different time
             claimed_datetime = datetime.fromisoformat(claimed_time.replace('Z', '+00:00'))
-            estimated_datetime = claimed_datetime + asyncio.timedelta(hours=4)  # 4 hours difference
+            estimated_datetime = claimed_datetime + timedelta(hours=4)  # 4 hours difference
             
             results.update({
                 "consistent": False,

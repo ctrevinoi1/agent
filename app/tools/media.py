@@ -2,7 +2,7 @@ import os
 import json
 import asyncio
 from typing import Dict, List, Any, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import aiohttp
 import uuid
 import re
@@ -86,7 +86,7 @@ async def extract_metadata(file_path: str) -> Dict[str, Any]:
             "dimensions": "1920x1080",
             "color_space": "RGB",
             "has_geotag": False,
-            "creation_date": (datetime.now() - asyncio.timedelta(days=5)).isoformat()
+            "creation_date": (datetime.now() - timedelta(days=5)).isoformat()
         })
     elif extension in ['mp4', 'mov', 'avi']:
         # Video metadata
@@ -95,7 +95,7 @@ async def extract_metadata(file_path: str) -> Dict[str, Any]:
             "duration": "00:01:23",
             "fps": "30",
             "has_audio": True,
-            "creation_date": (datetime.now() - asyncio.timedelta(days=3)).isoformat()
+            "creation_date": (datetime.now() - timedelta(days=3)).isoformat()
         })
     elif extension in ['mp3', 'wav', 'ogg']:
         # Audio metadata
@@ -103,7 +103,7 @@ async def extract_metadata(file_path: str) -> Dict[str, Any]:
             "duration": "00:02:45",
             "bitrate": "320 kbps",
             "sample_rate": "44100 Hz",
-            "creation_date": (datetime.now() - asyncio.timedelta(days=2)).isoformat()
+            "creation_date": (datetime.now() - timedelta(days=2)).isoformat()
         })
     
     return metadata
