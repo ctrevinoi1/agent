@@ -6,6 +6,7 @@ from datetime import datetime
 
 from app.agents.base import BaseAgent
 from app.config.config import config
+from app.logging_config import logger
 
 class ReporterAgent(BaseAgent):
     """
@@ -28,6 +29,7 @@ class ReporterAgent(BaseAgent):
         Returns:
             A formatted Markdown report
         """
+        logger.info(f"ReporterAgent: Generating report for query: {query}")
         # Generate a report prompt
         prompt = self.format_prompt(
             user_query=query,
@@ -112,4 +114,5 @@ class ReporterAgent(BaseAgent):
             "timestamp": datetime.now().isoformat()
         })
         
+        logger.info(f"ReporterAgent: Report generated for query: {query}")
         return report_content 

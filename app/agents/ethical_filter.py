@@ -8,6 +8,7 @@ from datetime import datetime
 from app.agents.base import BaseAgent
 from app.config.config import config
 from app.tools.moderation import check_content_policy, anonymize_text
+from app.logging_config import logger
 
 class EthicalFilterAgent(BaseAgent):
     """
@@ -33,6 +34,7 @@ class EthicalFilterAgent(BaseAgent):
         Returns:
             The filtered and approved report
         """
+        logger.info("EthicalFilterAgent: Filtering draft report for ethical concerns.")
         # Generate an ethical filter prompt
         prompt = self.format_prompt(draft_report=draft_report)
         
@@ -118,4 +120,5 @@ This report contains descriptions of potentially disturbing events including vio
             "timestamp": datetime.now().isoformat()
         })
         
+        logger.info("EthicalFilterAgent: Filtering complete.")
         return filtered_report 

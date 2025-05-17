@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QObject, Signal, Slot, QUrl
 from PySide6.QtGui import QIcon, QFont, QTextCursor, QDesktopServices
+from app.logging_config import logger
 
 class WebSocketThread(QObject):
     """Thread to handle WebSocket communication."""
@@ -67,6 +68,7 @@ class OsintGUI(QMainWindow):
     
     def __init__(self):
         super().__init__()
+        logger.info("Launching OSINT Analysis System GUI.")
         self.setWindowTitle("OSINT Analysis System")
         self.setMinimumSize(1000, 700)
         
@@ -205,6 +207,7 @@ class OsintGUI(QMainWindow):
         if not query:
             self.status_message.setText("Please enter a query")
             return
+        logger.info(f"User submitted query via GUI: {query}")
         
         # Clear previous results
         self.report_tab.clear()

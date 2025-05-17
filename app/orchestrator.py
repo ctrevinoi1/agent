@@ -8,6 +8,7 @@ from app.agents.collector import CollectorAgent
 from app.agents.verifier import VerifierAgent
 from app.agents.reporter import ReporterAgent
 from app.agents.ethical_filter import EthicalFilterAgent
+from app.logging_config import logger
 
 class Orchestrator:
     """
@@ -44,43 +45,45 @@ class Orchestrator:
             The final report as a string
         """
         self.current_query = query
+        logger.info(f"Processing query: {query}")
         
         # Step 1: Collection
         if callback:
             await callback("Starting data collection...")
-        
+        logger.info("Invoking CollectorAgent for data collection.")
         self.collected_data = await self.collector_agent.collect(query)
-        
+        logger.info(f"CollectorAgent collected {len(self.collected_data)} items.")
         if callback:
             await callback(f"Collection complete. Found {len(self.collected_data)} items.")
         
         # Step 2: Verification
         if callback:
             await callback("Starting verification process...")
-        
+        logger.info("Invoking VerifierAgent for data verification.")
         self.verified_data = await self.verifier_agent.verify(
             query, self.collected_data
         )
-        
+        logger.info(f"VerifierAgent verified {len(self.verified_data)} items.")
         if callback:
             await callback(f"Verification complete. {len(self.verified_data)} items verified.")
         
         # Step 3: Report writing
         if callback:
             await callback("Generating report...")
-        
+        logger.info("Invoking ReporterAgent to generate report.")
         self.draft_report = await self.reporter_agent.generate_report(
             query, self.verified_data
         )
+        logger.info("ReporterAgent generated draft report.")
         
         # Step 4: Ethical filtering
         if callback:
             await callback("Applying ethical filter...")
-        
+        logger.info("Invoking EthicalFilterAgent for ethical filtering.")
         self.final_report = await self.ethical_filter_agent.filter(
             self.draft_report
         )
-        
+        logger.info("EthicalFilterAgent produced final report.")
         if callback:
             await callback("Report complete.")
         

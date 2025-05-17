@@ -8,6 +8,7 @@ from app.agents.base import BaseAgent
 from app.config.config import config
 from app.tools.search import web_search, social_media_search
 from app.tools.media import download_media, extract_metadata
+from app.logging_config import logger
 
 class CollectorAgent(BaseAgent):
     """
@@ -35,6 +36,7 @@ class CollectorAgent(BaseAgent):
         Returns:
             A list of collected data items
         """
+        logger.info(f"CollectorAgent: Collecting data for query: {query}")
         # Generate a collection prompt from the user query
         prompt = self.format_prompt(user_query=query)
         
@@ -65,6 +67,7 @@ class CollectorAgent(BaseAgent):
         # Web search
         for term in search_terms:
             try:
+                logger.info(f"CollectorAgent: Using web_search tool for term: {term}")
                 web_results = await self.call_tool("web_search", query=term, max_results=5)
                 for result in web_results:
                     collected_data.append({
@@ -79,11 +82,12 @@ class CollectorAgent(BaseAgent):
                         "metadata": {}
                     })
             except Exception as e:
-                print(f"Error in web search for '{term}': {e}")
+                logger.error(f"Error in web search for '{term}': {e}")
         
         # Social media search
         for term in search_terms:
             try:
+                logger.info(f"CollectorAgent: Using social_media_search tool for term: {term}")
                 social_results = await self.call_tool("social_media_search", 
                                                      query=term, 
                                                      platforms=["twitter", "reddit"],
@@ -96,14 +100,16 @@ class CollectorAgent(BaseAgent):
                     
                     if "media_url" in result and result["media_url"]:
                         try:
+                            logger.info(f"CollectorAgent: Downloading media for url: {result['media_url']}")
                             media_path = await self.call_tool("download_media", 
                                                            url=result["media_url"])
                             
                             if media_path:
+                                logger.info(f"CollectorAgent: Extracting metadata for media: {media_path}")
                                 media_metadata = await self.call_tool("extract_metadata", 
                                                                     file_path=media_path)
                         except Exception as e:
-                            print(f"Error downloading media: {e}")
+                            logger.error(f"Error downloading media: {e}")
                     
                     collected_data.append({
                         "id": f"social_{len(collected_data)}",
@@ -123,7 +129,7 @@ class CollectorAgent(BaseAgent):
                         }
                     })
             except Exception as e:
-                print(f"Error in social media search for '{term}': {e}")
+                logger.error(f"Error in social media search for '{term}': {e}")
         
         # Add the collection results to memory
         self.add_to_memory({
@@ -133,4 +139,5 @@ class CollectorAgent(BaseAgent):
             "timestamp": datetime.now().isoformat()
         })
         
+        logger.info(f"CollectorAgent: Finished collecting data for query: {query}")
         return collected_data 

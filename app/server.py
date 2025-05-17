@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import uvicorn
 
 from app.orchestrator import orchestrator
+from app.logging_config import logger
 
 # Define API models
 class OsintQuery(BaseModel):
@@ -57,9 +58,10 @@ async def process_query(query: OsintQuery, background_tasks: BackgroundTasks):
     This will return a 202 Accepted response and process the query in the background.
     Check /status for updates.
     """
+    logger.info(f"Received user query: {query.query}")
     # Start the query processing in the background
     background_tasks.add_task(orchestrator.process_query, query.query)
-    
+    logger.info("Started background task for query processing.")
     # Return a response immediately
     return {
         "query": query.query,
@@ -87,40 +89,36 @@ async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates."""
     await websocket.accept()
     active_connections.append(websocket)
-    
+    logger.info("WebSocket client connected.")
     try:
         while True:
             # Wait for messages from the client
             data = await websocket.receive_text()
             data = json.loads(data)
-            
             if "query" in data:
-                # Process the query
                 query = data["query"]
-                
+                logger.info(f"Received user query via WebSocket: {query}")
                 # Define a callback to send status updates
                 async def status_callback(message: str):
                     await websocket.send_text(json.dumps({"status": message}))
-                
+                    logger.info(f"Status update sent to WebSocket client: {message}")
                 # Process the query with the callback
                 final_report = await orchestrator.process_query(query, status_callback)
-                
                 # Send the final report
                 await websocket.send_text(json.dumps({
                     "report": final_report,
                     "status": "complete"
                 }))
-    
+                logger.info("Final report sent to WebSocket client.")
     except WebSocketDisconnect:
         active_connections.remove(websocket)
-    
+        logger.warning("WebSocket client disconnected.")
     except Exception as e:
-        # Handle any other exceptions
         try:
             await websocket.send_text(json.dumps({"error": str(e)}))
         except:
             pass
-        
+        logger.error(f"WebSocket error: {e}")
         if websocket in active_connections:
             active_connections.remove(websocket)
 

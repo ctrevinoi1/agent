@@ -13,6 +13,7 @@ from app.tools.verification import (
     check_source_reliability,
     check_metadata_consistency
 )
+from app.logging_config import logger
 
 class VerifierAgent(BaseAgent):
     """
@@ -42,6 +43,7 @@ class VerifierAgent(BaseAgent):
         Returns:
             A list of verified data items
         """
+        logger.info(f"VerifierAgent: Verifying data for query: {query}")
         # Generate a verification prompt
         prompt = self.format_prompt(
             user_query=query,
@@ -61,6 +63,7 @@ class VerifierAgent(BaseAgent):
             }
             
             try:
+                logger.info(f"VerifierAgent: Checking source reliability for {item.get('url', '')}")
                 # Check source reliability
                 source_reliability = await self.call_tool(
                     "check_source_reliability",
@@ -78,6 +81,7 @@ class VerifierAgent(BaseAgent):
                 
                 # For items with media, perform additional verification
                 if "media_path" in item and item["media_path"]:
+                    logger.info(f"VerifierAgent: Running reverse_image_search for media: {item['media_path']}")
                     # Reverse image search
                     reverse_results = await self.call_tool(
                         "reverse_image_search",
@@ -106,6 +110,7 @@ class VerifierAgent(BaseAgent):
                         verification["notes"].append("No matches found in reverse image search.")
                     
                     # Attempt to geolocate the image
+                    logger.info(f"VerifierAgent: Running geolocate_image for media: {item['media_path']}")
                     geolocate_result = await self.call_tool(
                         "geolocate_image",
                         image_path=item["media_path"]
@@ -121,6 +126,7 @@ class VerifierAgent(BaseAgent):
                         )
                     
                     # Analyze shadows for time verification
+                    logger.info(f"VerifierAgent: Running analyze_shadows for media: {item['media_path']}")
                     shadow_result = await self.call_tool(
                         "analyze_shadows",
                         image_path=item["media_path"],
@@ -142,6 +148,7 @@ class VerifierAgent(BaseAgent):
                             )
                 
                 # Check metadata consistency
+                logger.info(f"VerifierAgent: Checking metadata consistency for item {item.get('id', 'unknown')}")
                 metadata_check = await self.call_tool(
                     "check_metadata_consistency",
                     item=item
@@ -184,7 +191,8 @@ class VerifierAgent(BaseAgent):
                     if explanation_line and len(explanation_line[0].split(":", 1)) > 1:
                         verification["notes"].append(f"Final assessment: {explanation_line[0].split(':', 1)[1].strip()}")
                     elif len(verification_decision.split("\n")) > 0:
-                        verification["notes"].append(f"Final assessment: {verification_decision.split('\n')[0]}")
+                        first_line = verification_decision.split("\n")[0]
+                        verification["notes"].append(f"Final assessment: {first_line}")
                 except:
                     # If parsing fails, make a conservative decision
                     verification["verified"] = False
@@ -199,7 +207,7 @@ class VerifierAgent(BaseAgent):
                     verified_data.append(item)
             
             except Exception as e:
-                print(f"Error verifying item {item.get('id', 'unknown')}: {e}")
+                logger.error(f"Error verifying item {item.get('id', 'unknown')}: {e}")
         
         # Add verification results to memory
         self.add_to_memory({
@@ -209,4 +217,5 @@ class VerifierAgent(BaseAgent):
             "timestamp": datetime.now().isoformat()
         })
         
+        logger.info(f"VerifierAgent: Finished verifying data for query: {query}")
         return verified_data 

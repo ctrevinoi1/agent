@@ -26,7 +26,7 @@ class BaseAgent:
         self.memory = []  # Simple memory for context
         
         # Configure OpenAI API
-        openai.api_key = config.OPENAI_API_KEY
+        self.openai_client = openai.AsyncOpenAI(api_key=config.OPENAI_API_KEY)
         
     def register_tool(self, tool_name: str, tool_func: Callable) -> None:
         """
@@ -62,19 +62,13 @@ class BaseAgent:
     
     async def call_llm(self, messages: List[Dict[str, str]]) -> str:
         """
-        Call the LLM with the given messages.
-        
-        Args:
-            messages: A list of message dictionaries (role, content)
-            
-        Returns:
-            The LLM's response
+        Call the LLM with the given messages using the new OpenAI Python SDK (>=1.0.0) async client.
         """
         try:
-            response = await openai.ChatCompletion.acreate(
+            response = await self.openai_client.chat.completions.create(
                 model=config.LLM_MODEL,
                 messages=messages,
-                temperature=0.2,  # Low temperature for factual responses
+                temperature=0.2,
             )
             return response.choices[0].message.content
         except Exception as e:
